@@ -1,9 +1,9 @@
 
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { createBoard, randomTetromino, checkCollision, rotate, clearLines } from '../utils/tetrisUtils';
 import { BOARD_HEIGHT, BOARD_WIDTH, INITIAL_DROP_TIME, DROP_TIME_DECREASE_PER_LEVEL, MIN_DROP_TIME, LINES_PER_LEVEL, INITIAL_LIVES } from '../constants';
 import { Player, BoardShape, Tetromino } from '../types';
+import { soundManager } from '../utils/soundManager';
 
 export const useTetris = (emptyCellColorClass: string) => {
   const [board, setBoard] = useState<BoardShape>(createBoard(emptyCellColorClass));
@@ -19,15 +19,14 @@ export const useTetris = (emptyCellColorClass: string) => {
   const [dropTime, setDropTime] = useState<number | null>(INITIAL_DROP_TIME);
   const [gameOver, setGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [lives, setLives] = useState(INITIAL_LIVES);
+  const [clearedLines, setClearedLines] = useState(0);
 
-  // Interval ref to prevent stale closures and manage the game loop
   const intervalRef = useRef<number | undefined>();
 
-  // Reset board when theme changes (emptyCellColorClass changes)
+  // Reset board when theme changes
   useEffect(() => {
     setBoard(createBoard(emptyCellColorClass));
-    setPlayer(prev => ({ // Reset player position to center with new board
+    setPlayer(prev => ({
       ...prev,
       pos: { x: BOARD_WIDTH / 2 - 2, y: 0 },
     }));
@@ -58,7 +57,7 @@ export const useTetris = (emptyCellColorClass: string) => {
     setDropTime(INITIAL_DROP_TIME);
     setGameOver(false);
     setIsPaused(false);
-    setLives(INITIAL_LIVES);
+    setClearedLines(0);
   }, [emptyCellColorClass]);
 
   const playerRotate = useCallback((board: BoardShape, dir: number) => {
@@ -76,33 +75,39 @@ export const useTetris = (emptyCellColorClass: string) => {
         return;
       }
     }
+    soundManager.rotatePiece();
     setPlayer(clonedPlayer);
   }, [player]);
+
+  const checkGameOver = useCallback((currentPlayer: Player): boolean => {
+    // Check if any block is at or above row 0
+    for (let y = 0; y < currentPlayer.tetromino.shape.length; y++) {
+      for (let x = 0; x < currentPlayer.tetromino.shape[y].length; x++) {
+        if (currentPlayer.tetromino.shape[y][x] !== 0) {
+          const boardY = y + currentPlayer.pos.y;
+          if (boardY <= 0) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }, []);
 
   const drop = useCallback(() => {
     if (!checkCollision(player, board, { x: 0, y: 1 })) {
       updatePlayerPos({ x: 0, y: 1, collided: false });
+      // No sound for automatic drop - only for manual actions
     } else {
-      // Piece settled
-      if (player.pos.y < 1) { // If player is at the top
-        if (lives > 1) {
-          setLives(prev => prev - 1);
-          // Instead of game over, reset the piece
-          setPlayer({
-            pos: { x: BOARD_WIDTH / 2 - 2, y: 0 },
-            tetromino: nextPiece,
-            collided: false,
-          });
-          setNextPiece(randomTetromino());
-          return;
-        } else {
-          setGameOver(true);
-          setDropTime(null);
-        }
+      // Piece settled - check for game over
+      if (checkGameOver(player)) {
+        soundManager.gameOver();
+        setGameOver(true);
+        setDropTime(null);
       }
       setPlayer((prev) => ({ ...prev, collided: true }));
     }
-  }, [player, board, updatePlayerPos, nextPiece, lives, emptyCellColorClass]); // Added emptyCellColorClass here
+  }, [player, board, updatePlayerPos, checkGameOver]);
 
   const dropPiece = () => {
     if (gameOver || isPaused) return;
@@ -120,20 +125,22 @@ export const useTetris = (emptyCellColorClass: string) => {
       }
       newY = y - player.pos.y;
     }
+    soundManager.hardDrop();
     updatePlayerPos({ x: 0, y: newY, collided: true });
   }, [player, board, updatePlayerPos, gameOver, isPaused]);
 
   const movePlayer = useCallback((dir: number) => {
     if (!gameOver && !isPaused && !checkCollision(player, board, { x: dir, y: 0 })) {
+      soundManager.movePiece();
       updatePlayerPos({ x: dir, y: 0, collided: false });
     }
   }, [player, board, updatePlayerPos, gameOver, isPaused]);
 
-  // Handle game updates when player.collided changes (piece settled)
+  // Handle game updates when piece settles
   useEffect(() => {
     if (player.collided) {
       setBoard((prevBoard) => {
-        // Merge the collided piece into the board permanently
+        // Merge piece into board
         player.tetromino.shape.forEach((row, y) => {
           row.forEach((value, x) => {
             if (value !== 0) {
@@ -146,11 +153,15 @@ export const useTetris = (emptyCellColorClass: string) => {
         const { newBoard: clearedBoard, clearedLines: newClearedLines } = clearLines(prevBoard, emptyCellColorClass);
 
         if (newClearedLines > 0) {
+          soundManager.lineClear();
           setLinesCleared((prev) => prev + newClearedLines);
           setScore((prev) => prev + (newClearedLines * 100 * level));
+          setClearedLines(newClearedLines);
 
           // Level up logic
-          if ((linesCleared + newClearedLines) >= (level * LINES_PER_LEVEL)) {
+          const totalLines = linesCleared + newClearedLines;
+          if (totalLines >= (level * LINES_PER_LEVEL)) {
+            soundManager.levelUp();
             setLevel((prev) => prev + 1);
             setDropTime(
               Math.max(MIN_DROP_TIME, INITIAL_DROP_TIME - (level * DROP_TIME_DECREASE_PER_LEVEL))
@@ -168,26 +179,17 @@ export const useTetris = (emptyCellColorClass: string) => {
       });
       setNextPiece(randomTetromino());
 
-      // Check if new piece immediately collides (game over condition)
-      if (checkCollision({ pos: { x: BOARD_WIDTH / 2 - 2, y: 0 }, tetromino: nextPiece, collided: false }, board, { x: 0, y: 0 })) {
-         if (lives > 1) {
-            setLives(prev => prev - 1);
-            // Respawn the piece again to prevent immediate game over after losing a life
-            setPlayer({
-              pos: { x: BOARD_WIDTH / 2 - 2, y: 0 },
-              tetromino: randomTetromino(), // New piece entirely
-              collided: false,
-            });
-            setNextPiece(randomTetromino());
-         } else {
-            setGameOver(true);
-            setDropTime(null);
-         }
+      // Check if new piece immediately collides
+      const spawnPlayer = { pos: { x: BOARD_WIDTH / 2 - 2, y: 0 }, tetromino: nextPiece, collided: false };
+      if (checkCollision(spawnPlayer, board, { x: 0, y: 0 }) && checkGameOver(spawnPlayer)) {
+        soundManager.gameOver();
+        setGameOver(true);
+        setDropTime(null);
       }
     }
-  }, [player.collided, board, nextPiece, level, linesCleared, lives, emptyCellColorClass]);
+  }, [player.collided, board, nextPiece, level, linesCleared, emptyCellColorClass, checkGameOver]);
 
-  // Game loop with interval
+  // Game loop
   useEffect(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -220,7 +222,7 @@ export const useTetris = (emptyCellColorClass: string) => {
     setGameOver,
     isPaused,
     setIsPaused,
-    lives,
+    clearedLines,
     resetGame,
     playerRotate,
     movePlayer,
