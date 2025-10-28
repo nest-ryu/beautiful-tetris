@@ -11,6 +11,11 @@ A beautiful Tetris game built with React and TypeScript, featuring multiple them
 - No grid lines for cleaner look
 - Instant game over when blocks reach the top
 
+
+ View this app : 
+ https://nest-ryu.github.io/beautiful-tetris/
+
+
 ## 🚀 Run Locally
 
 **Prerequisites:** Node.js
