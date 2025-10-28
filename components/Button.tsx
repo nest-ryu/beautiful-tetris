@@ -1,31 +1,34 @@
 
 import React from 'react';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps {
   children: React.ReactNode;
+  onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'danger';
+  disabled?: boolean;
+  className?: string;
 }
 
-const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', className, ...props }) => {
-  const baseStyles = 'px-4 py-2 rounded-lg font-bold transition duration-200 ease-in-out shadow-lg text-sm';
-  let variantStyles = '';
-
-  switch (variant) {
-    case 'primary':
-      variantStyles = 'bg-blue-600 hover:bg-blue-700 text-white';
-      break;
-    case 'secondary':
-      variantStyles = 'bg-gray-600 hover:bg-gray-700 text-white';
-      break;
-    case 'danger':
-      variantStyles = 'bg-red-600 hover:bg-red-700 text-white';
-      break;
-  }
+const Button: React.FC<ButtonProps> = ({ 
+  children, 
+  onClick, 
+  variant = 'primary', 
+  disabled = false,
+  className = '' 
+}) => {
+  const baseClasses = 'px-6 py-3 rounded-lg font-bold text-lg transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100';
+  
+  const variantClasses = {
+    primary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg',
+    secondary: 'bg-gray-600 hover:bg-gray-700 text-white shadow-lg',
+    danger: 'bg-red-600 hover:bg-red-700 text-white shadow-lg',
+  };
 
   return (
     <button
-      className={`${baseStyles} ${variantStyles} ${className || ''}`}
-      {...props}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
     >
       {children}
     </button>

@@ -1,47 +1,57 @@
 
-
 import React from 'react';
 import { Tetromino } from '../types';
 import Cell from './Cell';
 
 interface NextPieceDisplayProps {
   nextPiece: Tetromino;
-  emptyCellClass: string; // New prop
-  uiBgClass: string; // New prop
-  uiBorderClass: string; // New prop
+  emptyCellClass: string;
+  uiBgClass: string;
+  uiBorderClass: string;
 }
 
-const NextPieceDisplay: React.FC<NextPieceDisplayProps> = ({ nextPiece, emptyCellClass, uiBgClass, uiBorderClass }) => {
-  // Create a small grid to display the next piece
-  const gridRows = nextPiece.shape.length;
-  const gridCols = nextPiece.shape[0].length;
+const NextPieceDisplay: React.FC<NextPieceDisplayProps> = ({ 
+  nextPiece, 
+  emptyCellClass, 
+  uiBgClass, 
+  uiBorderClass 
+}) => {
+  const rows = 4;
+  const cols = 4;
+  const shape = nextPiece.shape;
 
-  const displayGrid = Array.from(Array(gridRows), () =>
-    Array(gridCols).fill([emptyCellClass, 'clear'])
-  );
-
-  nextPiece.shape.forEach((row, y) => {
-    row.forEach((value, x) => {
-      if (value !== 0) {
-        displayGrid[y][x] = [nextPiece.color, 'clear'];
-      }
-    });
-  });
+  // Center the piece in a 4x4 grid
+  const offsetX = Math.floor((cols - shape[0].length) / 2);
+  const offsetY = Math.floor((rows - shape.length) / 2);
 
   return (
-    <div className={`${uiBgClass} ${uiBorderClass} border-2 rounded p-2 flex flex-col items-center justify-center`}>
-      <h3 className="font-['Press_Start_2P'] text-sm mb-2 text-gray-300">NEXT</h3>
+    <div className={`${uiBgClass} ${uiBorderClass} border-2 rounded-xl p-4 shadow-xl w-full max-w-xs`}>
+      <div className="text-center mb-3">
+        <h3 className="text-lg font-bold text-gray-300">NEXT</h3>
+      </div>
       <div
+        className="grid grid-cols-4 gap-0 mx-auto"
         style={{
-          display: 'grid',
-          gridTemplateRows: `repeat(${gridRows}, minmax(0, 1fr))`,
-          gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+          width: `${cols * 32}px`,
+          height: `${rows * 32}px`,
         }}
       >
-        {displayGrid.map((row, y) =>
-          row.map((cell, x) => (
-            <Cell key={`${y}-${x}-next`} type={cell} />
-          ))
+        {Array.from({ length: rows }).map((_, y) =>
+          Array.from({ length: cols }).map((_, x) => {
+            const shapeY = y - offsetY;
+            const shapeX = x - offsetX;
+            const hasBlock = 
+              shapeY >= 0 && shapeY < shape.length &&
+              shapeX >= 0 && shapeX < shape[0].length &&
+              shape[shapeY][shapeX] !== 0;
+
+            return (
+              <Cell
+                key={`${y}-${x}`}
+                type={hasBlock ? [nextPiece.color, 'clear'] : [emptyCellClass, 'clear']}
+              />
+            );
+          })
         )}
       </div>
     </div>

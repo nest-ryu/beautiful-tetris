@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 
 interface GameInfoProps {
@@ -7,29 +6,30 @@ interface GameInfoProps {
   level: number;
   linesCleared: number;
   lives: number;
-  uiBgClass: string; // New prop
-  uiBorderClass: string; // New prop
-  uiInnerBgClass: string; // New prop
+  uiBgClass: string;
+  uiBorderClass: string;
+  uiInnerBgClass: string;
 }
 
 const GameInfo: React.FC<GameInfoProps> = ({ score, level, linesCleared, lives, uiBgClass, uiBorderClass, uiInnerBgClass }) => {
   return (
-    <div className={`flex flex-col gap-3 p-4 ${uiBgClass} ${uiBorderClass} border-2 rounded shadow-md w-full max-w-xs`}>
-      <div className={`flex justify-between items-center ${uiInnerBgClass} p-2 rounded`}>
-        <span className="font-['Press_Start_2P'] text-xs text-gray-300">SCORE</span>
-        <span className="font-['Press_Start_2P'] text-sm text-yellow-400">{score}</span>
-      </div>
-      <div className={`flex justify-between items-center ${uiInnerBgClass} p-2 rounded`}>
-        <span className="font-['Press_Start_2P'] text-xs text-gray-300">LEVEL</span>
-        <span className="font-['Press_Start_2P'] text-sm text-green-400">{level}</span>
-      </div>
-      <div className={`flex justify-between items-center ${uiInnerBgClass} p-2 rounded`}>
-        <span className="font-['Press_Start_2P'] text-xs text-gray-300">LINES</span>
-        <span className="font-['Press_Start_2P'] text-sm text-purple-400">{linesCleared}</span>
-      </div>
-      <div className={`flex justify-between items-center ${uiInnerBgClass} p-2 rounded`}>
-        <span className="font-['Press_Start_2P'] text-xs text-gray-300">LIVES</span>
-        <span className="font-['Press_Start_2P'] text-sm text-red-400">{lives}</span>
+    <div className={`${uiBgClass} ${uiBorderClass} border-2 rounded-xl p-4 shadow-xl w-full max-w-xs`}>
+      <div className={`${uiInnerBgClass} p-4 rounded-lg space-y-3`}>
+        <div className="text-center">
+          <div className="text-sm text-gray-400 mb-1">SCORE</div>
+          <div className="text-3xl font-bold text-white font-mono">{score.toLocaleString()}</div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          <div className="text-center">
+            <div className="text-xs text-gray-400 mb-1">LEVEL</div>
+            <div className="text-2xl font-bold text-blue-400 font-mono">{level}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs text-gray-400 mb-1">LINES</div>
+            <div className="text-2xl font-bold text-green-400 font-mono">{linesCleared}</div>
+          </div>
+        </div>
       </div>
     </div>
   );

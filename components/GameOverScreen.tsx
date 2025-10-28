@@ -9,12 +9,13 @@ interface GameOverScreenProps {
 
 const GameOverScreen: React.FC<GameOverScreenProps> = ({ score, onRestart }) => {
   return (
-    <div className="absolute inset-0 bg-black bg-opacity-75 flex flex-col items-center justify-center p-4 rounded-lg z-10">
-      <h2 className="font-['Press_Start_2P'] text-4xl text-red-500 mb-6 animate-pulse">GAME OVER!</h2>
-      <p className="font-['Press_Start_2P'] text-xl text-white mb-8">FINAL SCORE: <span className="text-yellow-400">{score}</span></p>
-      <Button variant="primary" onClick={onRestart}>
-        RESTART GAME
-      </Button>
+    <div className="flex flex-col items-center">
+      <h2 className="font-['Press_Start_2P'] text-4xl text-red-400 mb-4 animate-pulse">GAME OVER</h2>
+      <div className="text-xl text-gray-300 mb-6">
+        <div>Final Score:</div>
+        <div className="text-3xl font-bold text-white font-mono mt-2">{score.toLocaleString()}</div>
+      </div>
+      <Button onClick={onRestart}>PLAY AGAIN</Button>
     </div>
   );
 };

@@ -8,15 +8,16 @@ interface CellProps {
 
 const Cell: React.FC<CellProps> = React.memo(({ type }) => (
   <div
-    className={`w-6 h-6 sm:w-8 sm:h-8 border border-gray-700 ${type[0]} relative
-      ${type[0] !== 'bg-gray-800' ? 'shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)]' : ''}
+    className={`w-6 h-6 sm:w-8 sm:h-8 ${type[0]} relative
+      ${type[0] !== 'bg-gray-800' ? 'shadow-inner' : ''}
+      transition-all duration-100
     `}
   >
-    {/* Optional: Add inner highlights for a more 3D look */}
+    {/* 3D effect for placed blocks */}
     {type[0] !== 'bg-gray-800' && (
       <>
-        <div className="absolute inset-px rounded-sm opacity-20 bg-white" />
-        <div className="absolute inset-px rounded-sm opacity-20 bg-gray-900" />
+        <div className="absolute inset-0 opacity-30 bg-white" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 35%, 0% 35%)' }} />
+        <div className="absolute inset-0 opacity-20 bg-black" style={{ clipPath: 'polygon(0% 65%, 100% 65%, 100% 100%, 0% 100%)' }} />
       </>
     )}
   </div>
