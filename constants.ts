@@ -68,7 +68,7 @@ export const INITIAL_DROP_TIME = 1000; // milliseconds
 export const DROP_TIME_DECREASE_PER_LEVEL = 70; // milliseconds
 export const MIN_DROP_TIME = 100; // milliseconds
 export const LINES_PER_LEVEL = 10;
-export const INITIAL_LIVES = 3;
+export const INITIAL_LIVES = 1;
 
 export const THEMES: Theme[] = [
   {
